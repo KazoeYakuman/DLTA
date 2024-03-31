@@ -84,10 +84,17 @@ class NeuralNetwork:
         grads[f'db{L}'] = np.sum(dZ_output, axis=1, keepdims=True) / m
 
         dA_prev = np.dot(self.parameters[f'W{L}'].T, dZ_output)
+        print(self.parameters[f'W{L}'].shape)
+        print(dZ_output.shape)
+        print(dA_prev.shape)
         for i in reversed(range(1, L)):
+            print(i)
             A, Z = caches[i-1]
             dZ = dA_prev * self.relu_derivative(Z)
+            print(dZ.shape)
+            print(A.shape)
             grads[f'dW{i}'] = np.dot(dZ, A.T) / m
+            print(grads[f'dW{i}'].shape)
             grads[f'db{i}'] = np.sum(dZ, axis=-1, keepdims=True) / m
             dA_prev = np.dot(self.parameters[f'W{i}'].T, dZ)
 
@@ -95,6 +102,11 @@ class NeuralNetwork:
 
     def update_parameters(self, grads, lr):
         for i in range(1, len(self.hidden_sizes) + 2):
+            print(i)
+            print(grads[f'dW{i}'].shape)
+            print(grads[f'db{i}'].shape)
+            print(self.parameters[f'W{i}'].shape)
+            print(self.parameters[f'b{i}'].shape)
             self.parameters[f'W{i}'] -= lr * grads[f'dW{i}']
             self.parameters[f'b{i}'] -= lr * grads[f'db{i}']
 
