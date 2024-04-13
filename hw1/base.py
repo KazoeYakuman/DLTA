@@ -1,6 +1,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
 
 def load_data(filename):
@@ -44,7 +45,7 @@ class NeuralNetwork:
         parameters = {}
         layer_dims = [self.input_size] + (list)(self.hidden_sizes) + [self.output_size]
         for i in range(1, len(layer_dims)):
-            parameters[f'W{i}'] = np.random.randn(layer_dims[i], layer_dims[i-1]) * 0.01
+            parameters[f'W{i}'] = np.random.randn(layer_dims[i-1], layer_dims[i]) * 0.01
             parameters[f'b{i}'] = np.zeros((layer_dims[i], 1))
         return parameters
 
@@ -65,10 +66,10 @@ class NeuralNetwork:
         caches = []
         A = X
         for i in range(1, len(self.hidden_sizes) + 1):
-            Z = np.dot(self.parameters[f'W{i}'], A) + self.parameters[f'b{i}']
+            Z = np.dot(A, self.parameters[f'W{i}']) + self.parameters[f'b{i}']
             A = self.relu(Z)
             caches.append((A, Z))
-        Z_output = np.dot(self.parameters[f'W{len(self.hidden_sizes)+1}'], A) + self.parameters[f'b{len(self.hidden_sizes)+1}']
+        Z_output = np.dot(A, self.parameters[f'W{len(self.hidden_sizes)+1}']) + self.parameters[f'b{len(self.hidden_sizes)+1}']
         A_output = self.softmax(Z_output)
         caches.append((A_output, Z_output))
         return A_output, caches
@@ -84,17 +85,10 @@ class NeuralNetwork:
         grads[f'db{L}'] = np.sum(dZ_output, axis=1, keepdims=True) / m
 
         dA_prev = np.dot(self.parameters[f'W{L}'].T, dZ_output)
-        print(self.parameters[f'W{L}'].shape)
-        print(dZ_output.shape)
-        print(dA_prev.shape)
         for i in reversed(range(1, L)):
-            print(i)
             A, Z = caches[i-1]
             dZ = dA_prev * self.relu_derivative(Z)
-            print(dZ.shape)
-            print(A.shape)
             grads[f'dW{i}'] = np.dot(dZ, A.T) / m
-            print(grads[f'dW{i}'].shape)
             grads[f'db{i}'] = np.sum(dZ, axis=-1, keepdims=True) / m
             dA_prev = np.dot(self.parameters[f'W{i}'].T, dZ)
 
@@ -102,11 +96,8 @@ class NeuralNetwork:
 
     def update_parameters(self, grads, lr):
         for i in range(1, len(self.hidden_sizes) + 2):
-            print(i)
-            print(grads[f'dW{i}'].shape)
-            print(grads[f'db{i}'].shape)
             print(self.parameters[f'W{i}'].shape)
-            print(self.parameters[f'b{i}'].shape)
+            print(grads[f'dW{i}'].shape)
             self.parameters[f'W{i}'] -= lr * grads[f'dW{i}']
             self.parameters[f'b{i}'] -= lr * grads[f'db{i}']
 
@@ -124,13 +115,13 @@ class NeuralNetwork:
         return np.argmax(A_output, axis=1)
 
 
-train_data = train_data.reshape(train_data.shape[0], -1).T / 255.0
-test_data = test_data.reshape(test_data.shape[0], -1).T / 255.0
+train_data = train_data.reshape(train_data.shape[0], -1) / 255.0  # (60000, 784)
+test_data = test_data.reshape(test_data.shape[0], -1) / 255.0
 num_classes = 10
-train_label_one_hot = np.eye(num_classes)[train_label].T
-test_label_one_hot = np.eye(num_classes)[test_label].T
+train_label_one_hot = np.eye(num_classes)[train_label]  # (60000, 10)
+test_label_one_hot = np.eye(num_classes)[test_label]
 
-nn = NeuralNetwork(train_data.shape[0], num_classes, 256, 64)
+nn = NeuralNetwork(train_data.shape[-1], num_classes, 256, 64)
 nn.train(train_data, train_label_one_hot, epochs=1000, lr=0.001)
 predictions = nn.predict(test_data)
 accuracy = np.mean(predictions == test_label)
