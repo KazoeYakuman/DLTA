@@ -46,7 +46,7 @@ class NeuralNetwork:
         layer_dims = [self.input_size] + (list)(self.hidden_sizes) + [self.output_size]
         for i in range(1, len(layer_dims)):
             parameters[f'W{i}'] = np.random.randn(layer_dims[i-1], layer_dims[i]) * 0.01
-            parameters[f'b{i}'] = np.zeros((layer_dims[i], 1))
+            parameters[f'b{i}'] = np.zeros((layer_dims[i], 1)).T
         return parameters
 
     def relu(self, Z):
@@ -79,25 +79,27 @@ class NeuralNetwork:
         m = X.shape[-1]
         L = len(caches)
 
+        for i in caches:
+            print(i[0].shape)
+            print(i[1].shape)
+
         A_output, _ = caches[-1]
         dZ_output = A_output - Y
-        grads[f'dW{L}'] = np.dot(dZ_output, caches[-2][0].T) / m
-        grads[f'db{L}'] = np.sum(dZ_output, axis=1, keepdims=True) / m
+        grads[f'dW{L}'] = np.dot(caches[-2][0].T, dZ_output) / m
+        grads[f'db{L}'] = np.sum(dZ_output, axis=0, keepdims=True).T / m
 
-        dA_prev = np.dot(self.parameters[f'W{L}'].T, dZ_output)
+        dA_prev = np.dot(dZ_output, self.parameters[f'W{L}'].T)
         for i in reversed(range(1, L)):
             A, Z = caches[i-1]
             dZ = dA_prev * self.relu_derivative(Z)
-            grads[f'dW{i}'] = np.dot(dZ, A.T) / m
-            grads[f'db{i}'] = np.sum(dZ, axis=-1, keepdims=True) / m
-            dA_prev = np.dot(self.parameters[f'W{i}'].T, dZ)
+            grads[f'dW{i}'] = np.dot(A.T, dZ) / m
+            grads[f'db{i}'] = np.sum(dZ, axis=0, keepdims=True).T / m
+            dA_prev = np.dot(dZ, self.parameters[f'W{i}'].T)
 
         return grads
 
     def update_parameters(self, grads, lr):
         for i in range(1, len(self.hidden_sizes) + 2):
-            print(self.parameters[f'W{i}'].shape)
-            print(grads[f'dW{i}'].shape)
             self.parameters[f'W{i}'] -= lr * grads[f'dW{i}']
             self.parameters[f'b{i}'] -= lr * grads[f'db{i}']
 
