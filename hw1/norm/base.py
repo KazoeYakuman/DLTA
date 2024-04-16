@@ -19,7 +19,7 @@ def load_label(filename):
     with open(filename, 'rb') as f:
         magic = int.from_bytes(f.read(4), byteorder='big')
         assert magic == 2049, 'Invalid magic number ' + str(magic)
-        num_labels = int.from_bytes(f.read(4), byteorder='big')
+        # num_labels = int.from_bytes(f.read(4), byteorder='big')
         labels = np.frombuffer(f.read(), dtype=np.uint8)
     return labels
 
@@ -103,4 +103,5 @@ class MLP:
 model = MLP(784, 10)
 model.train(train_data, train_label_one_hot, epoch=100, lr=0.01)
 model.test(test_data, test_label_one_hot)
+model.test()
 time.sleep(999)
