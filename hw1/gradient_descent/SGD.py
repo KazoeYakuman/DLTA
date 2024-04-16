@@ -109,5 +109,5 @@ class MLP:
 
 
 model = MLP(784, 10)
-model.train(train_data, train_label_one_hot, epoch=2, lr=0.06)
+model.train(train_data, train_label_one_hot, epoch=2, lr=0.05)
 model.plot_loss('SGD.png', model.test(test_data, test_label_one_hot))
